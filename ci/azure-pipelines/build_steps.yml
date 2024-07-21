@@ -1,0 +1,37 @@
+steps:
+  - task: Bash@3
+    displayName: 'Download JRE'
+    inputs:
+      targetType: 'inline'
+      script: |
+        mkdir -p $(System.ArtifactsDirectory)/asset
+        cd $(System.ArtifactsDirectory)/asset || exit 1
+        jres=(
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jre_aarch64_mac_hotspot_17.0.11_9.tar.gz
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jre_aarch64_linux_hotspot_17.0.11_9.tar.gz
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jre_x64_linux_hotspot_17.0.11_9.tar.gz
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jre_x64_mac_hotspot_17.0.11_9.tar.gz
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jre_x64_windows_hotspot_17.0.11_9.zip
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jre_x86-32_windows_hotspot_17.0.11_9.zip
+        )
+        for url in "${jres[@]}"; do
+          curl -L -O "$url"
+        done
+  - task: Cache@2
+    displayName: 'Cache Gradle'
+    inputs:
+      key: 'gradle | "$(Agent.OS)" | **/build.gradle'
+      restoreKeys: |
+        gradle | "$(Agent.OS)"
+        gradle
+      path: '$(GRADLE_USER_HOME)'
+  - script: |
+      umask a+w
+      chmod -R a+w doc_src
+    displayName: 'Preparation for build'
+  - task: Gradle@3
+    inputs:
+      tasks: 'clean sourceDistZip distZip mac linux win'
+      options: '--build-cache -PenvIsCi --scan -PassetDir=$(System.ArtifactsDirectory)/asset'
+      jdkVersionOption: '1.17'
+    displayName: 'Build distribution packages and docs'

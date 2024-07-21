@@ -1,0 +1,65 @@
+## Windows code signing
+# ex.
+# pkcs11engine=/usr/lib/x86_64-linux-gnu/engines-3/pkcs11.so
+#
+## when using Certum
+# pkcs11module=/usr/lib/libcrypto3PKCS.so
+## when using Safenet e-token/Digicert
+## see https://www.digicert.com/StaticFiles/SAC_10_7_Linux_GA.zip
+# pkcs11module=/usr/lib64/libeToken.so
+#
+# winCodesignTimestampUrl=http://time.certum.pl/
+# winCodesignTimestampUrl=http://timestamp.digicert.com
+# pkcs11cert='pkcs11:type=cert'
+# winCodesignCert=/home/user/a-provided-certification.pem
+#
+# mandatory
+pkcs11module=
+winCodesignPassword=
+# optional
+pkcs11cert=
+winCodesignCert=
+winCodesignTimestampUrl=
+
+## Mac code signing
+macCodesignIdentity=
+
+## Mac notarization
+macNotarizationUsername=
+
+## Sonatype OSSRH publishing (synced to Maven Central)
+ossrhUser=
+ossrhKey=
+
+## Signing for Maven Central
+#
+# Option 1: Supply key ID and password directly in this file
+# Option 2: Leave signing.* properties blank to use the system gpg2 command; see
+#   https://docs.gradle.org/current/userguide/signing_plugin.html#sec:sec:gnupg_signatory_configuration
+#
+# Last 8 characters of full key ID
+signing.keyId=
+signing.password=
+# Exported as e.g. `gpg --export-secret-keys > secring.gpg`
+signing.secretKeyRingFile=
+
+## example with GnuPG
+#signing.gnupg.keyName=<KeyHashHex>
+#signing.gnupg.executable=gpg
+
+## SourceForge web
+sourceforgeWebUser=
+# Not required when using SSH auth
+sourceforgeWebPassword=
+
+## Uncomment when force skipping build of documentation
+## equivalent with command line option -PforceSkipDocumentBuild=1 or
+## an environment variable ORG_GRADLE_PROJECT_forceSkipDocumentBuild=1
+# forceSkipDocumentBuild=1
+
+## Speed-up build process
+## Caution: parallel execution may lead test failures
+org.gradle.configuration-cache=false
+org.gradle.caching=true
+org.gradle.configureondemand=true
+org.gradle.parallel=true

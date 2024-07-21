@@ -1,0 +1,15 @@
+steps:
+  - task: Cache@2
+    displayName: 'Cache Gradle'
+    inputs:
+      key: 'gradle | "$(Agent.OS)" | **/build.gradle'
+      restoreKeys: |
+        gradle | "$(Agent.OS)"
+        gradle
+      path: '$(GRADLE_USER_HOME)'
+  - task: Gradle@3
+    displayName: Check
+    inputs:
+      tasks: check
+      options: '-PenvIsCi --no-daemon --scan'
+      jdkVersionOption: '1.17'
