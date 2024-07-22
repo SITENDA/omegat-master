@@ -206,6 +206,7 @@ public abstract class BaseMainWindowMenu implements ActionListener, MenuListener
         viewMenu = createMenu("MW_VIEW_MENU", MenuExtender.MenuKey.VIEW);
         toolsMenu = createMenu("TF_MENU_TOOLS", MenuExtender.MenuKey.TOOLS);
         optionsMenu = createMenu("MW_OPTIONSMENU", MenuExtender.MenuKey.OPTIONS);
+        makeTMXMenu = createMenu("TF_MENU_MAKETMX", MenuExtender.MenuKey.MAKE_TMX);
         helpMenu = createMenu("TF_MENU_HELP", MenuExtender.MenuKey.HELP);
         helpMenu.setName(HELP_MENU);
 
@@ -989,6 +990,8 @@ public abstract class BaseMainWindowMenu implements ActionListener, MenuListener
         return optionsAutoCompleteMenu;
     }
 
+    public JMenu getMakeTMXMenu() { return makeTMXMenu;}
+
     public JMenu getHelpMenu() {
         return helpMenu;
     }
@@ -1057,6 +1060,7 @@ public abstract class BaseMainWindowMenu implements ActionListener, MenuListener
     JMenuItem helpLastChangesMenuItem;
     JMenuItem helpLogMenuItem;
     JMenuItem helpUpdateCheckMenuItem;
+    JMenu makeTMXMenu;
     JMenu helpMenu;
     JMenuItem lowerCaseMenuItem;
     JMenu optionsMenu;

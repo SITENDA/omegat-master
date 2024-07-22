@@ -41,6 +41,8 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 
 import org.omegat.util.gui.Styles;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * We need to redefine some standard document behavior.
@@ -52,6 +54,7 @@ import org.omegat.util.gui.Styles;
 @SuppressWarnings("serial")
 public class Document3 extends DefaultStyledDocument {
 
+    private static final Logger log = LoggerFactory.getLogger(Document3.class);
     protected final EditorController controller;
 
     /** Position of active translation in text. */
@@ -104,6 +107,7 @@ public class Document3 extends DefaultStyledDocument {
         StyleConstants.setForeground(defaultStyle, Styles.EditorColor.COLOR_FOREGROUND.getColor());
         StyleConstants.setBackground(defaultStyle, Styles.EditorColor.COLOR_BACKGROUND.getColor());
         setFont(controller.font);
+        log.info("Document3 constructor called");
     }
 
     private Style getDefaultStyle() {

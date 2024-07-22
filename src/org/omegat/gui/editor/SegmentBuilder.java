@@ -56,6 +56,8 @@ import org.omegat.util.Preferences;
 import org.omegat.util.StringUtil;
 import org.omegat.util.gui.StaticUIUtils;
 import org.omegat.util.gui.UIThreadsUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class for store information about displayed segment, and for show segment in
@@ -73,11 +75,13 @@ import org.omegat.util.gui.UIThreadsUtil;
  * @author Aaron Madlon-Kay
  * @author Thomas Cordonnier
  */
+
 public class SegmentBuilder {
     /** Attributes for show text. */
     public static final String SEGMENT_MARK_ATTRIBUTE = "SEGMENT_MARK_ATTRIBUTE";
     public static final String SEGMENT_SPELL_CHECK = "SEGMENT_SPELL_CHECK";
     private static final DecimalFormat NUMBER_FORMAT = new DecimalFormat("0000");
+    private static final Logger log = LoggerFactory.getLogger(SegmentBuilder.class);
 
     // synonym used until OmegaT 5.7 = leave segment empty
     // true = do NOT insert (take care of double negation!)

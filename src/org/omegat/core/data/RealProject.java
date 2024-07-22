@@ -338,6 +338,7 @@ public class RealProject implements IProject {
     public synchronized void loadProject(boolean onlineMode) {
         Log.logInfoRB("LOG_DATAENGINE_LOAD_START");
         UIThreadsUtil.mustNotBeSwingThread();
+        logger.info("Load Project called");
 
         // load a new project
         try {

@@ -62,6 +62,7 @@ public final class MainWindowMenu extends BaseMainWindowMenu
         mainMenu.add(viewMenu);
         mainMenu.add(toolsMenu);
         mainMenu.add(optionsMenu);
+        mainMenu.add(makeTMXMenu);
         mainMenu.add(helpMenu);
     }
 

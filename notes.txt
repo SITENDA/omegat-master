@@ -1,0 +1,2 @@
+SegmentBuilder class contains SourceTextEntry from which we get the source text and translation text. The SegmentBuilder objects are instantiated from the EditorController class
+SourceTextEntry objects are initialized from the RealProject class via the addSegment method

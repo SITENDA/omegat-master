@@ -64,6 +64,10 @@ public final class MenuExtender {
          */
         OPTIONS("options", Platform.isMacOSX() ? 9 : 11),
         /**
+         * Make TMX menu.
+         */
+        MAKE_TMX("make_tmx", 2),
+        /**
          * Help menu.
          */
         HELP("help", 3);
