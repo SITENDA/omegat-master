@@ -228,6 +228,9 @@ ext {
 }
 
 dependencies {
+    //  Just been added by Amos Sitenda
+    implementation 'org.xerial:sqlite-jdbc:3.7.2'
+
     // Libs are provided in the "source" distribution only
     if (providedLibsDir.directory) {
         implementation fileTree(dir: providedLibsDir, include: '**/*.jar', excludes: ['**/slf4j-api-1.*.jar'])
@@ -1670,14 +1673,15 @@ publishing {
         }
     }
     repositories {
-        maven {
-            url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
-            credentials(PasswordCredentials) {
-                username findProperty('ossrhUsername')
-                password findProperty('ossrhPassword')
-            }
+    maven {
+        url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+        credentials(PasswordCredentials) {
+            username findProperty('ossrhUsername')
+            password findProperty('ossrhPassword')
         }
     }
+}
+
 }
 
 signing {

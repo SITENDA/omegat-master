@@ -74,4 +74,9 @@ public abstract class BaseMainWindowMenuHandler {
     public void helpAboutMenuItemActionPerformed() {
     }
 
+    public void makeTMXMenuActionPerformed() {
+        System.out.println("Make TMX Menu should do an action");
+        ProjectUICommands.projectCreateTMX();
+    }
+
 }

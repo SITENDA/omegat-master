@@ -81,6 +81,7 @@ import org.omegat.util.StringUtil;
 import org.omegat.util.gui.MenuExtender;
 import org.omegat.util.gui.OSXIntegration;
 import org.omegat.util.gui.Styles;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for create main menu and handle main menu events.
@@ -112,6 +113,7 @@ public abstract class BaseMainWindowMenu implements ActionListener, MenuListener
 
     public static final String HELP_MENU = "help_menu";
     public static final String HELP_ABOUT_MENUITEM = "help_about_menuitem";
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(BaseMainWindowMenu.class);
 
     /** MainWindow instance. */
     protected final IMainWindow mainWindow;
@@ -136,7 +138,6 @@ public abstract class BaseMainWindowMenu implements ActionListener, MenuListener
         String action = evt.getActionCommand();
 
         Log.logInfoRB("LOG_MENU_CLICK", action);
-
         invokeAction(action, evt.getModifiers());
     }
 
@@ -662,6 +663,25 @@ public abstract class BaseMainWindowMenu implements ActionListener, MenuListener
             }
         });
 
+        makeTMXMenu.addMenuListener(new MenuListener() {
+
+            @Override
+            public void menuSelected(MenuEvent e) {
+                log.info("MakeTMXMenu Selected");
+                mainWindowMenuHandler.makeTMXMenuActionPerformed();
+            }
+
+            @Override
+            public void menuDeselected(MenuEvent e) {
+
+            }
+
+            @Override
+            public void menuCanceled(MenuEvent e) {
+
+            }
+        });
+
         String key = "findInProjectReuseLastWindow";
         KeyStroke stroke = PropertiesShortcuts.getMainMenuShortcuts().getKeyStroke(key);
         mainWindow.getApplicationFrame().getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(stroke, key);
@@ -954,6 +974,7 @@ public abstract class BaseMainWindowMenu implements ActionListener, MenuListener
         projectOpenRecentMenuItem.removeAll();
         List<String> items = RecentProjects.getRecentProjects();
         for (String project : items) {
+            //System.out.println("Recent project : " + project);
             JMenuItem recentProjectMenuItem = new JMenuItem(project);
             File projectFile = new File(project);
             recentProjectMenuItem

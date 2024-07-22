@@ -1,20 +1,20 @@
 /**************************************************************************
  OmegaT - Computer Assisted Translation (CAT) tool
-          with fuzzy matching, translation memory, keyword search,
-          glossaries, and translation leveraging into updated projects.
+ with fuzzy matching, translation memory, keyword search,
+ glossaries, and translation leveraging into updated projects.
 
  Copyright (C) 2008-2016 Alex Buloichik
-               2011 Martin Fleurke
-               2012 Thomas Cordonnier
-               2013 Yu Tang
-               2014 Aaron Madlon-Kay, Piotr Kulik
-               2015 Aaron Madlon-Kay, Yu Tang
-               2016 Alex Buloichik             
-               2017 Didier Briel
-               2021 ISHIKAWA,chiaki
-               2022 Hiroshi Miura
-               Home page: https://www.omegat.org/
-               Support center: https://omegat.org/support
+ 2011 Martin Fleurke
+ 2012 Thomas Cordonnier
+ 2013 Yu Tang
+ 2014 Aaron Madlon-Kay, Piotr Kulik
+ 2015 Aaron Madlon-Kay, Yu Tang
+ 2016 Alex Buloichik
+ 2017 Didier Briel
+ 2021 ISHIKAWA,chiaki
+ 2022 Hiroshi Miura
+ Home page: https://www.omegat.org/
+ Support center: https://omegat.org/support
 
  This file is part of OmegaT.
 
@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -51,6 +52,8 @@ import javax.swing.SwingWorker;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
+
+import org.sqlite.JDBC;
 
 import org.omegat.CLIParameters;
 import org.omegat.Main;
@@ -69,12 +72,7 @@ import org.omegat.core.team2.IRemoteRepository2;
 import org.omegat.core.team2.RemoteRepositoryProvider;
 import org.omegat.filters2.master.FilterMaster;
 import org.omegat.filters2.master.PluginUtils;
-import org.omegat.gui.dialogs.ChooseMedProject;
-import org.omegat.gui.dialogs.FileCollisionDialog;
-import org.omegat.gui.dialogs.NewProjectFileChooser;
-import org.omegat.gui.dialogs.NewTeamProjectController;
-import org.omegat.gui.dialogs.ProjectPropertiesDialog;
-import org.omegat.gui.dialogs.ProjectPropertiesDialogController;
+import org.omegat.gui.dialogs.*;
 import org.omegat.gui.editor.SegmentExportImport;
 import org.omegat.util.FileUtil;
 import org.omegat.util.FileUtil.ICollisionCallback;
@@ -108,6 +106,7 @@ import gen.core.project.RepositoryMapping;
  * @author Hiroshi Miura
  */
 public final class ProjectUICommands {
+
 
     private ProjectUICommands() {
     }
@@ -172,6 +171,103 @@ public final class ProjectUICommands {
             }
         }.execute();
     }
+
+    public static void projectCreateTMX() {
+        UIThreadsUtil.mustBeSwingThread();
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (Core.getProject().isProjectLoaded()) {
+            return;
+        }
+
+        // Determine the Documents directory
+        String userHome = System.getProperty("user.home");
+        String documentsPath;
+
+        // Check if the OS is Windows
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+            documentsPath = userHome + File.separator + "Documents" + File.separator + "make_omegat_tmx";
+        } else {
+            // Assuming Mac or Linux
+            documentsPath = userHome + File.separator + "Documents" + File.separator + "make_omegat_tmx";
+        }
+
+        final File dir = new File(documentsPath);
+        if (!dir.exists() && !dir.mkdirs()) {
+            JOptionPane.showMessageDialog(Core.getMainWindow().getApplicationFrame(),
+                    "Unable to create project directory: " + documentsPath,
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        new SwingWorker<Void, Void>() {            @Override
+            protected Void doInBackground() throws Exception {
+                // Ask about new project properties
+                ProjectProperties props = new ProjectProperties(dir);
+                props.setSourceLanguage(Preferences.getPreferenceDefault(Preferences.SOURCE_LOCALE, "AR-LB"));
+                props.setTargetLanguage(Preferences.getPreferenceDefault(Preferences.TARGET_LOCALE, "UK-UA"));
+
+                final ProjectProperties newProps = ProjectPropertiesDialogController.showDialog(
+                        Core.getMainWindow().getApplicationFrame(), props, dir.getAbsolutePath(),
+                        ProjectPropertiesDialog.Mode.NEW_PROJECT);
+
+                IMainWindow mainWindow = Core.getMainWindow();
+                Cursor hourglassCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
+                Cursor oldCursor = mainWindow.getCursor();
+                mainWindow.setCursor(hourglassCursor);
+
+                if (newProps == null) {
+                    // User clicks on 'Cancel'
+                    dir.delete();
+                    mainWindow.setCursor(oldCursor);
+                    return null;
+                }
+
+                final String projectRoot = newProps.getProjectRoot();
+                if (!StringUtil.isEmpty(projectRoot)) {
+                    // Create project
+                    try {
+                        ProjectFactory.createProject(newProps);
+                        RecentProjects.add(dir.getAbsolutePath());
+
+                        // Connect to SQLite database
+                        String url = "jdbc:sqlite:E:\\eagles_tape_editor\\Assets\\subtitles.db";
+
+                        try (Connection conn = DriverManager.getConnection(url)) {
+                            if (conn != null) {
+                                System.out.println("Connected to database");
+                                // Query the data
+                                String sql = "SELECT Name, LanguageCode from Language;";
+                                try (Statement stmt = conn.createStatement();
+                                     ResultSet rs = stmt.executeQuery(sql)) {
+                                    while (rs.next()) {
+                                        System.out.println(rs.getString("Name") + ", " +
+                                                rs.getString("LanguageCode"));
+                                    }
+                                }
+                            } else {
+                                System.out.println("Connection failed");
+                            }
+                        } catch (SQLException e) {
+                            System.out.println(e.getMessage());
+                        }
+
+                    } catch (Exception ex) {
+                        Log.logErrorRB(ex, "PP_ERROR_UNABLE_TO_READ_PROJECT_FILE");
+                        Core.getMainWindow().displayErrorRB(ex, "PP_ERROR_UNABLE_TO_READ_PROJECT_FILE");
+                    }
+                }
+
+                mainWindow.setCursor(oldCursor);
+                return null;
+            }
+        }.execute();
+    }
+
 
     public static void projectOpenMED() {
         UIThreadsUtil.mustBeSwingThread();
@@ -342,9 +438,9 @@ public final class ProjectUICommands {
                 RemoteRepositoryProvider remoteRepositoryProvider = new RemoteRepositoryProvider(projectRoot,
                         repos);
                 remoteRepositoryProvider.switchAllToLatest();
-                for (String file : new String[] { OConsts.FILE_PROJECT,
+                for (String file : new String[]{OConsts.FILE_PROJECT,
                         OConsts.DEFAULT_INTERNAL + '/' + FilterMaster.FILE_FILTERS,
-                        OConsts.DEFAULT_INTERNAL + '/' + SRX.CONF_SENTSEG }) {
+                        OConsts.DEFAULT_INTERNAL + '/' + SRX.CONF_SENTSEG}) {
                     remoteRepositoryProvider.copyFilesFromReposToProject(file);
                 }
 
@@ -397,8 +493,7 @@ public final class ProjectUICommands {
      * Open project. Does nothing if there is already a project open.
      * Convenience method for {@link #projectOpen(File, boolean)}.
      *
-     * @param projectDirectory
-     *            Open project stored in projectDirectory
+     * @param projectDirectory Open project stored in projectDirectory
      */
     public static void projectOpen(File projectDirectory) {
         projectOpen(projectDirectory, false);
@@ -408,10 +503,8 @@ public final class ProjectUICommands {
      * Open project. Does nothing if a project is already open and closeCurrent
      * is false.
      *
-     * @param projectDirectory
-     *            project directory or null if user must choose it
-     * @param closeCurrent
-     *            whether to close the current project first, if any
+     * @param projectDirectory project directory or null if user must choose it
+     * @param closeCurrent     whether to close the current project first, if any
      */
     public static void projectOpen(final File projectDirectory, boolean closeCurrent) {
         UIThreadsUtil.mustBeSwingThread();
@@ -664,11 +757,9 @@ public final class ProjectUICommands {
 
     /**
      * Detect whether local `omegat.project` is identical with remote one.
-     * 
-     * @param that
-     *            remote omegat.project.
-     * @param my
-     *            local omegat.project.
+     *
+     * @param that remote omegat.project.
+     * @param my   local omegat.project.
      * @return true if identical, otherwise false.
      */
     static boolean isIdenticalOmegatProjectProperties(ProjectProperties that, ProjectProperties my) {
@@ -747,7 +838,7 @@ public final class ProjectUICommands {
     }
 
     static void setRootRepositoryMapping(List<RepositoryDefinition> repos,
-            RepositoryDefinition repositoryDefinition) {
+                                         RepositoryDefinition repositoryDefinition) {
         if (repositoryDefinition == null) {
             return;
         }
@@ -832,7 +923,6 @@ public final class ProjectUICommands {
      * <p>
      * This does not reload remote project when team mode. It is useful when
      * user added source files in local.
-     *
      */
     private static void projectReloadLocal() {
         final ProjectProperties props = Core.getProject().getProjectProperties();
@@ -951,9 +1041,9 @@ public final class ProjectUICommands {
                 Core.getMainWindow().showLengthMessage(OStrings.getString("MW_SEGMENT_LENGTH_DEFAULT"));
                 Core.getMainWindow().showProgressMessage(
                         Preferences.getPreferenceEnumDefault(Preferences.SB_PROGRESS_MODE,
-                              MainWindowStatusBar.StatusBarMode.DEFAULT) == MainWindowStatusBar.StatusBarMode.DEFAULT
-                                        ? OStrings.getString("MW_PROGRESS_DEFAULT")
-                                        : OStrings.getProgressBarDefaultPrecentageText());
+                                MainWindowStatusBar.StatusBarMode.DEFAULT) == MainWindowStatusBar.StatusBarMode.DEFAULT
+                                ? OStrings.getString("MW_PROGRESS_DEFAULT")
+                                : OStrings.getProgressBarDefaultPrecentageText());
 
                 return null;
             }
@@ -985,9 +1075,9 @@ public final class ProjectUICommands {
         // displaying the dialog to change paths and other properties
         final ProjectProperties newProps =
                 ProjectPropertiesDialogController.showDialog(Core.getMainWindow().getApplicationFrame(),
-                Core.getProject().getProjectProperties(),
-                Core.getProject().getProjectProperties().getProjectName(),
-                ProjectPropertiesDialog.Mode.EDIT_PROJECT);
+                        Core.getProject().getProjectProperties(),
+                        Core.getProject().getProjectProperties().getProjectName(),
+                        ProjectPropertiesDialog.Mode.EDIT_PROJECT);
         if (newProps == null) {
             return;
         }
@@ -1165,9 +1255,8 @@ public final class ProjectUICommands {
 
     /**
      * Open remote project specified by url.
-     * 
-     * @param url
-     *            remote project repository.
+     *
+     * @param url remote project repository.
      */
     public static void projectRemote(String url) {
         File projectDir;
@@ -1204,10 +1293,8 @@ public final class ProjectUICommands {
      * Convenience method for
      * {@link #projectImportFiles(String, File[], boolean)}.
      *
-     * @param destination
-     *            The path to copy the files to
-     * @param toImport
-     *            Files to copy to destination path
+     * @param destination The path to copy the files to
+     * @param toImport    Files to copy to destination path
      */
     public static void projectImportFiles(String destination, File[] toImport) {
         projectImportFiles(destination, toImport, true);
@@ -1218,13 +1305,10 @@ public final class ProjectUICommands {
      * indicated. Note that a modal dialog will be shown if any of the specified
      * files would be overwritten.
      *
-     * @param destination
-     *            The path to copy the files to
-     * @param toImport
-     *            Files to copy to destination path
-     * @param doReload
-     *            If true, the project will be reloaded after the files are
-     *            successfully copied
+     * @param destination The path to copy the files to
+     * @param toImport    Files to copy to destination path
+     * @param doReload    If true, the project will be reloaded after the files are
+     *                    successfully copied
      */
     public static void projectImportFiles(String destination, File[] toImport, boolean doReload) {
         UIThreadsUtil.mustBeSwingThread();

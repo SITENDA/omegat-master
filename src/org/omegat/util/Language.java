@@ -31,10 +31,7 @@
 
 package org.omegat.util;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.regex.Matcher;
 
 /**
@@ -88,12 +85,15 @@ public class Language implements Comparable<Object> {
             locale = EMPTY_LOCALE;
         } else {
             Locale checkLocale = Locale.forLanguageTag(str);
+            if (str.trim().equals("LG")) System.out.println("checkLocale is : " + checkLocale.getLanguage() + ", country : " + checkLocale.getCountry());
 
             // Locale matches BCP 47
             if (!checkLocale.getLanguage().isEmpty()) {
+                if (str.trim().equals("LG")) System.out.println("Luganda language is not empty");
                 locale = checkLocale;
             } else {
                 // If this did not work, fallback to the old parsing method
+                if (str.trim().equals("LG")) System.out.println("It did not work for Luganda language, falling back to the old parsing method");
                 Matcher m = PatternConsts.LANG_AND_COUNTRY.matcher(str);
                 if (m.matches() && m.groupCount() >= 1) {
                     String languageCode = m.group(1);
@@ -644,7 +644,12 @@ public class Language implements Comparable<Object> {
      * @return Unmodifiable list of languages
      */
     public static List<Language> getLanguages() {
+        List<Language> languages = Collections.unmodifiableList(Arrays.asList(LANGUAGES));
+//        for (Language language : languages) {
+//            System.out.println(language.getLanguage()  + ", " + language.getDisplayName()  + ", " + language.getCountryCode());
+//        }
         return Collections.unmodifiableList(Arrays.asList(LANGUAGES));
+
     }
 
     /**

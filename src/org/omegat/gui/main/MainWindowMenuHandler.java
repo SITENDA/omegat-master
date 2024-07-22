@@ -855,7 +855,6 @@ public final class MainWindowMenuHandler extends BaseMainWindowMenuHandler {
     public void optionsAccessConfigDirMenuItemActionPerformed() {
         ProjectUICommands.openFile(new File(StaticUtils.getConfigDir()));
     }
-
     /**
      * Show help.
      */
